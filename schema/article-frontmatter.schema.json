@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Atlas Article Frontmatter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "category",
+    "hsk_level",
+    "tags",
+    "summary",
+    "audience",
+    "intent",
+    "pilot_priority"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 140
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "learn-chinese",
+        "hsk-prep",
+        "chinese-for-work",
+        "china-library",
+        "notes"
+      ]
+    },
+    "hsk_level": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "enum": [
+        null,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 8,
+      "items": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 32
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 24,
+      "maxLength": 220
+    },
+    "audience": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "lower-intermediate",
+        "intermediate",
+        "upper-intermediate",
+        "advanced",
+        "mixed"
+      ]
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "daily-life",
+        "exam",
+        "business",
+        "travel",
+        "culture",
+        "grammar",
+        "pronunciation",
+        "reference",
+        "notes"
+      ]
+    },
+    "pilot_priority": {
+      "type": "string",
+      "enum": [
+        "p0",
+        "p1",
+        "p2"
+      ]
+    }
+  }
+}

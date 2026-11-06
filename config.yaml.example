@@ -1,0 +1,23 @@
+# Atlas Content Pipeline - Configuration
+# Override default values without modifying code
+
+# Input
+source: "/Users/adam/Desktop/知识库/中文教学知识库完整导出4.12.md"
+
+# Output
+output_dir: "/Users/adam/Desktop/中文教学/atlas-content-pipeline/output/pilot"
+
+# Processing
+limit: 30
+selection: "p0-seed"  # p0-seed | first | ids
+ids: ""  # Comma-separated note IDs when selection=ids
+max_body_chars: 6500
+
+# LLM
+provider: "auto"  # auto | claude-cli | anthropic-api | heuristic
+model: "claude-sonnet-4-0"
+max_retries: 2
+
+# Behavior
+dry_run: false
+verbose: false

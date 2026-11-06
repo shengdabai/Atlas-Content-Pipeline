@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install flake8
+
+      - name: Lint
+        run: |
+          flake8 scripts/ tests/ schema/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run unit tests
+        run: |
+          python -m unittest tests/test_pipeline.py -v
+
+      - name: Run integration tests
+        run: |
+          python -m unittest tests/test_integration.py -v
+
+      - name: Validate JSON schema
+        run: |
+          python -c "import json, sys; json.load(open('schema/article-frontmatter.schema.json')); print('Schema valid')"
+
+      - name: Heuristic mode smoke test
+        run: |
+          echo '## 1. 测试笔记 {#note-1} | 标签: 日常 | 创建: 2024-01-01
+
+日常问候用语你好吗' > /tmp/test_export.md
+          python scripts/getnote_frontmatter_pipeline.py --source /tmp/test_export.md --output-dir /tmp/atlas_output --limit 1 --provider heuristic --dry-run
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t atlas-content-pipeline .
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run deploy script
+        run: chmod +x scripts/deploy.sh && ./scripts/deploy.sh docker
+        env:
+          DOCKER_TAG: atlas-content-pipeline:${{ github.sha }}
