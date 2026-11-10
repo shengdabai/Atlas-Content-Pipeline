@@ -67,11 +67,18 @@ class Note:
     score: int = 0
 
 
+def positive_int(value: str) -> int:
+    number = int(value)
+    if number <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return number
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, default=DEFAULT_SOURCE)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT)
-    parser.add_argument("--limit", type=int, default=30)
+    parser.add_argument("--limit", type=positive_int, default=30)
     parser.add_argument(
         "--selection",
         choices=["p0-seed", "first", "ids"],
@@ -84,11 +91,17 @@ def parse_args() -> argparse.Namespace:
         choices=["auto", "claude-cli", "anthropic-api", "heuristic"],
         default="auto",
     )
-    parser.add_argument("--max-body-chars", type=int, default=6500)
-    parser.add_argument("--max-retries", type=int, default=2)
+    parser.add_argument("--max-body-chars", type=positive_int, default=6500)
+    parser.add_argument("--max-retries", type=positive_int, default=2)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--verbose", action="store_true")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.selection == "ids":
+        try:
+            [int(part.strip()) for part in args.ids.split(",") if part.strip()]
+        except ValueError:
+            parser.error("--ids must be a comma-separated list of integers")
+    return args
 
 
 def parse_export(markdown: str) -> list[Note]:
@@ -347,7 +360,14 @@ def call_claude_cli(prompt: str, model: str) -> str:
     cmd = [
         claude_path,
         "-p",
-        prompt,
+        # Source notes are untrusted data, not permission to operate the host.
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--disable-slash-commands",
+        "--setting-sources",
+        "",
+        "--no-session-persistence",
         "--model",
         model,
         "--output-format",
@@ -357,6 +377,7 @@ def call_claude_cli(prompt: str, model: str) -> str:
     ]
     result = subprocess.run(
         cmd,
+        input=prompt,
         check=False,
         capture_output=True,
         text=True,
@@ -683,6 +704,8 @@ def validate_frontmatter(data: dict[str, Any]) -> list[str]:
     for field in required:
         if field not in data:
             errors.append(f"missing field: {field}")
+    if set(data) - set(required):
+        errors.append("unexpected frontmatter fields")
 
     if errors:
         return errors

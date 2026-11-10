@@ -2,10 +2,10 @@
 # Override default values without modifying code
 
 # Input
-source: "/Users/adam/Desktop/知识库/中文教学知识库完整导出4.12.md"
+source: "input/getnote-export.md"
 
 # Output
-output_dir: "/Users/adam/Desktop/中文教学/atlas-content-pipeline/output/pilot"
+output_dir: "output/pilot"
 
 # Processing
 limit: 30
